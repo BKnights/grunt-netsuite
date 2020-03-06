@@ -1,0 +1,9 @@
+{
+
+	"NS_CONSUMER_KEY" :    "from your application setup",
+	"NS_CONSUMER_SECRET" : "from your application setup",
+	"NS_TOKEN_ID" :        "from your token setup",
+	"NS_TOKEN_SECRET" :    "from your token setup",
+	"NS_ACCOUNT_ID" :"YOUR ACCOUNT ID. IN UPPERCASE IF IT HAS LETTERS",
+	"NS_UPLOAD_PATH" : "https://account_id.restlets.api.netsuite.com... from the setup of the companion restlet"
+}
