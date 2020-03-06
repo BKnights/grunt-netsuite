@@ -3,7 +3,7 @@
 > Upload project files to Netsuite File Cabinet
 
 ## Getting Started
-This plugin requires Grunt `~0.4.5`
+This plugin requires Grunt `~1.0.4`
 
 If you haven't used [Grunt](http://gruntjs.com/) before, be sure to check out the [Getting Started](http://gruntjs.com/getting-started) guide, as it explains how to create a [Gruntfile](http://gruntjs.com/sample-gruntfile) as well as install and use Grunt plugins. Once you're familiar with that process, you may install this plugin with this command:
 
@@ -15,75 +15,99 @@ Once the plugin has been installed, it may be enabled inside your Gruntfile with
 
 ```js
 grunt.loadNpmTasks('grunt-netsuite');
+
 ```
+
+The netsuite task requires options. The samples below have the secure options in a file ns_config.json. This file should not be committed to version control or be allowed to escape to the public.
+
+```json
+{
+
+	"NS_CONSUMER_KEY" :    "from your integrations setup",
+	"NS_CONSUMER_SECRET" : "from your integrations setup",
+	"NS_TOKEN_ID" :        "from your token setup",
+	"NS_TOKEN_SECRET" :    "from your token setup",
+	"NS_ACCOUNT_ID" :"YOUR ACCOUNT ID. IN UPPERCASE IF IT HAS LETTERS",
+	"NS_UPLOAD_PATH" : "https://account_id.restlets.api.netsuite.com... from the setup of the companion restlet"
+}
+```
+
+## Companion Bundle
+This package works with a RESTlet that handles navigating the Netsuite file cabinet. Bundle 322271 is a public bundle that has the RESTLet and a role with just enough permissions for the uploads. The bundle's code is available at https://github.com/BKnights/grunt-netsuite-restlet
+
+## Access
+In order to use the RESTlet you'll need to create access. See the Netsuite help for creating an integration and token based access.
+
+When the integration is created Netsuite will present integration id and secret tokens. These should be copied and pasted to the ns_config.json file.
+
+When the access tokens are created they too should be copied and pasted to the ns_config.json file.
+
+When you have deployed the RESTlet (either via the bundle installation or by downloading and installing this code) copy its external URL to ns_config.json as well.
 
 ## The "netsuite" task
 
 ### Overview
-In your project's Gruntfile, add a section named `netsuite` to the data object passed into `grunt.initConfig()`.
+In your project's Gruntfile, add a section named `netsuite` to the data object passed into `grunt.initConfig()`. Note the two ways to specify the root of the Netsuite destination. The 4085 is the internal id of a folder under  Live Hosting Files.
 
 ```js
+var ns_config = require('./ns_config.json');
+
 grunt.initConfig({
   netsuite: {
-    options: {
-      // Task-specific options go here.
-    },
-    your_target: {
+    options:Object.assign({
+        rate_limit_delay:300,
+        overwriteFiles:true,
+        isPublic:true
+      }, ns_config),
+    web: {
       // Target-specific file lists and/or options go here.
+      files: [
+          {cwd:'path to file/not part of Netsuite path/', src:['**/*', '!*.bak'], filter:'isFile', dest:4085}
+         ]
     },
+    ssp: {
+      files: [
+        {cwd: 'project/path to/SSP/', src:['**/*', '!**/*.bak'], filter:'isFile', dest:'Web Site Hosting Files/Live Hosting Files/SSP Applications/KOTN/Simple'}
+      ]
+    }
   },
 });
 ```
 
-### Options
+### Watching files
+If you want to watch files and upload them automatically then:
+```shell
+npm install grunt-contrib-watch --save-dev
+```
 
-#### options.separator
-Type: `String`
-Default value: `',  '`
-
-A string value that is used to do something with whatever.
-
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
-
-### Usage Examples
-
-#### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
+Enable it inside your Gruntfile with this line of JavaScript:
 
 ```js
-grunt.initConfig({
-  netsuite: {
-    options: {},
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
-});
-```
+grunt.loadNpmTasks('grunt-contrib-watch');
 
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
+```
 
 ```js
+var ns_config = require('./ns_config.json');
+
 grunt.initConfig({
   netsuite: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
+    ...
   },
-});
+
+  watch:{
+    options:{
+      spawn:false
+    },
+    web:{
+      files:  ['path to file/not part of Netsuite path/**/*'],
+      tasks:['netsuite:web']
+    },
+    ssp:{
+      files:  ['project/path to/SSP/**/*'],
+      tasks:['netsuite:ssp']
+    }
+
+  }
+}
 ```
-
-## Contributing
-In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
-
-## Release History
-_(Nothing yet)_

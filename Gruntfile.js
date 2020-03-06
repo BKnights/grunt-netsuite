@@ -39,7 +39,7 @@ module.exports = function(grunt) {
           overwriteFiles:true,
         },
         files: [
-          {cwd:'test/fixtures/site/', src:['**/*'], filter:'isFile', dest:'4085'}
+          {cwd:'test/fixtures/site/', src:['**/*', '!**/*.bak'], filter:'isFile', dest:'4085'}
          ]
       },
       ssp: {
@@ -48,7 +48,7 @@ module.exports = function(grunt) {
           overwriteFiles:true        
         },
         files: [
-          {cwd: 'test/fixtures/SSP/', src:['**/*'], filter:'isFile', dest:'Web Site Hosting Files/Live Hosting Files/SSP Applications/KOTN/Simple'}
+          {cwd: 'test/fixtures/SSP/', src:['**/*', '!**/*.bak'], filter:'isFile', dest:'Web Site Hosting Files/Live Hosting Files/SSP Applications/KOTN/Simple'}
         ]
       }
     },
