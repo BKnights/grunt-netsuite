@@ -32,7 +32,7 @@ function prepFile(grunt, fileSpec){
 
 	return {
 		rootId: rootIsFolderId ? fileSpec.dest : null,
-		folderPath : ((rootIsFolderId ? '' : fileSpec.dest) + '/'+path.dirname(fileSpec.src)).replace(/\/{2}/g, '/'),
+		folderPath : ((rootIsFolderId ? '' : fileSpec.dest) + '/'+path.dirname(fileSpec.src)).replace(/\/{2}/g, '/').replace(/([\.\/])+$/, ''),
 		fileName : path.basename(fileSpec.src),
 		content : isBinary ? contents.toString('base64') : contents.toString(),
 		encoding: isBinary ? null : 'utf8',

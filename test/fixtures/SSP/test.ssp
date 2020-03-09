@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" >
+<%=getPageFullHead()%>
+
+
+<link rel="stylesheet" type="text/css" href="css/styles.css" >
+<style type="text/css">
+	#passwordStatus, #hint-no-good{display:none;}
+	label.req:after{content:'*'}
+	div.f-row label.error{padding-left:130px;clear:left;width:auto;font-size:11px; margin-right: auto;}
+</style>
+<script type="text/javascript" src="js/jquery-latest.json2.min.js"></script>
+<script type="text/javascript" src="js/jquery.validate.min.js"></script>
+
+<script type="text/javascript">
+	var OPC = (function(){
+		var opc = {};
+		var $ = jQuery;
+
+		$.fn.serializeObject = function(){
+			var o = {};
+			var a = this.serializeArray();
+			$.each(a, function() {
+				if (o[this.name] !== undefined) {
+					if (!o[this.name].push) {
+						o[this.name] = [o[this.name]];
+					}
+					o[this.name].push(this.value || '');
+				} else {
+					o[this.name] = this.value || '';
+				}
+			});
+			return o;
+		};
+
+		function fireAction(actionName, params, cb_success, cb_fail, doPost, url){
+			var data = {
+				method: actionName,
+				params:params
+			};
+			var responder = function(jR){
+				if(jR.header.status.code == 'SUCCESS') cb_success(jR);
+				else cb_fail(jR);
+			};
+			url = url || 'services/user.ss';
+			if(!doPost){
+				$.getJSON(url+'?data='+ encodeURIComponent(JSON.stringify(data)), responder);
+			}else{
+				$.post(url, {data: JSON.stringify(data)},responder, 'json');
+			}
+		}
+
+		function loginUser(params){
+			$("#loginStatus").html("");
+			fireAction('login', params, 
+				function(obj){
+					window.location = obj.result.redirecturl;
+				}, 
+				function(obj){
+					$("#loginStatus").html(obj.header.status.message);
+				}
+			);
+		}
+
+		opc.loginUser = loginUser;
+
+		function forgotPassword(params){
+			$("#loginStatus").html("");
+			fireAction('getPasswordHint', params,
+				function(obj){
+					$("#passwordStatus span.hint").html(obj.result.hint);
+					$("#passwordStatus,#hint-no-good").show().find("span.did-show-hint").show();
+
+				},
+				function(obj){
+					$("#loginStatus").html(obj.header.status.message);
+					$("#passwordStatus").hide();
+					$("#hint-no-good").show().find("span.did-show-hint").hide();
+				}
+			);
+
+		}
+		opc.forgotPassword = forgotPassword;
+
+
+		function sendPasswordRetrievalEmail(params){
+			$("#passwordStatus,#hint-no-good").hide();
+			$("#loginStatus").html("");
+			fireAction('sendPasswordRetrievalEmail', params,
+				function(obj){
+					$("#loginStatus").html("An email with a password reset link has been sent.");
+
+				},
+				function(obj){
+					$("#loginStatus").html(obj.header.status.message);
+				}
+			);
+		}
+
+		opc.sendPasswordRetrievalEmail = sendPasswordRetrievalEmail;
+
+		function registerUser(params){
+		  $("#loginStatus").html("");
+			fireAction('registerCustomer', params, 
+				function(obj){
+					window.location = obj.result.redirecturl;
+				}, 
+				function(obj){
+					$("#loginStatus").html(obj.header.status.message);
+				},
+				true);       
+		}
+
+		opc.registerUser = registerUser;
+
+		function loadCountries(cb){
+			if(this.countries){
+				cb(this.countries);
+				return;
+			}
+
+			fireAction('getAll', null, 
+				function(obj){
+					this.countries = obj.result.countries;
+					cb(obj.result.countries);
+				}, 
+				function(obj){
+					$("#loginStatus").html(obj.header.status.message);
+				},
+				false,
+				"services/country.ss");                  
+		}
+
+		opc.loadCountries = loadCountries;
+		return opc;
+	})();
+
+	jQuery(function($){
+		var srcMatch = /\bsc=(\d+)/.exec(window.location.search);
+		if(srcMatch){
+			var srcCat = srchMatch[1];
+			$("input[name='custentity_kotn_web_entry_point']").val(srcCat);
+
+		}
+		//var partner = /\bNLPartnerId=([^&]+)/.exec(document.cookie);
+
+	});
+</script>
+</head>
+
+<body>
+
+<img id="progress" src="images/ajax-loader.gif" style="display:none;" >
+<div id='div__header' class='noprint' leftmargin='0' topmargin='0' marginwidth='1' >
+	<table border='0' cellspacing='0' cellpadding='0' width='100%'>
+		<%=getPageTop()%>
+	</table>
+</div>
+<div id="div__body">
+<div class="main-wrapper clearfix">
+	<!-- BEGIN breadcrumbs -->
+	<div class="breadcrumbs clearfix">
+		<%=getCrumbTrail()%>
+	</div>
+	<!-- END breadcrumbs -->
+	<!-- BEGIN heading -->
+	<div class="heading clearfix">
+		<h1>Please Sign In</h1>
+	</div>
+	<!-- END heading -->
+	<!-- BEGIN form -->
+	<h3>Veryi Olde</h3>
+	<div class="block form-sign">
+		<div class="form clearfix">
+			<div class="form-col-wrap clearfix">
+				<!-- BEGIN form col -->
+				<div class="form-col clearfix">
+			<form id="returningCustomerLoginForm">
+						<fieldset>
+							<h2>Returning Customers</h2>
+							<div id="returningCustomer" class="form-frame clearfix">
+								<p id='passwordStatus'>Your password hint is: <span class="hint"></span></p>                             
+								<div class="f-row f-row-link">
+									<p id="loginStatus"></p>
+								</div>
+
+								<div class="f-row">
+									<label for="login-email">Email Address</label>
+									<input id="login-email" name="email" class="f-input required" value="" type="email">
+								</div>
+								<div class="f-row">
+									<label for="login-password">Password</label>
+									<input id="login-password" name="password" class="f-input required" type="password">
+								</div>
+
+								 <div class="f-row f-row-link">
+									<a href="#" onclick="OPC.forgotPassword({email:$('#login_email').val()}); return false;">Forgot password?</a>
+								</div>
+								<div id="hint-no-good" class="f-row f-row-link">
+									<p class="hint"><span class='did-show-hint'>Still don't remember your password?&nbsp;</span><a href="#" onclick="OPC.sendPasswordRetrievalEmail($('#returningCustomerLoginForm').serializeObject()); return false;">Enter your email above and then click here and we will email you instructions to reset your password.</a></p>
+								</div>
+
+							   <div class="f-row f-row-btn">
+								   <button type="submit" id="loginUser" class="button3">Sign In<em>»</em></button>
+								</div>
+
+							 </div>
+						</fieldset>
+					</form>
+				</div>
+				<!-- END form col -->
+				<!-- BEGIN form col -->
+				<div class="form-col fl-r clearfix">
+					<form id="newCustomerLoginForm">
+						<input type="hidden" name="custentity_kotn_web_entry_point" value="">
+						<fieldset>
+							<h2>New Customers</h2>
+							<div class="form-frame clearfix">
+								<!-- OPC_GUEST_REG -->
+
+								<h3>Create An Account</h3>
+								
+								<p id="createAccountStatus" class="confirmation-message"></p> <br>
+
+								<div id="createAccountFields">
+									<div class="f-row">
+										<label for="reg-name">Name</label>
+										<input id="reg-name" name="name" value="" required class="f-input required" type="text">
+									</div>
+									<div class="f-row">
+										<label for="reg-name">Company Name</label>
+										<input id="reg-companyname" name="companyname" value="" required class="f-input required" type="text">
+									</div>
+									<div class="f-row">
+										<label for="reg-email">Email Address</label>
+										<input id="reg-email" name="email" value="" required class="f-input required" type="email">
+									</div>
+									<div class="f-row">
+										<label for="reg-password">Enter a Password</label>
+										<input id="reg-password" name="password" required class="f-input required" type="password">
+									</div>
+									<div class="f-row">
+										<label for="reg-password1">Re-enter Password</label>
+										<input id="reg-password1" name="password1" required class="f-input required  validate-password" type="password"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-hint">Password Hint</label>
+										<input id="reg-hint" name="hint" minlength="3" value="" class="f-input" type="text">
+									</div>
+
+									<h3>Main/Billing Address</h3>
+
+									<div class="f-row">
+										<label for="reg-addressee">Addressee</label>
+										<input id="reg-addressee" name="addressee" required class="f-input required" type="text"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-attention">Attention</label>
+										<input id="reg-attention" name="attention" class="f-input" type="text"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-addr1">Address 1</label>
+										<input id="reg-addr1" name="addr1" required class="f-input required" type="text"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-addr2">Address 2</label>
+										<input id="reg-addr2" name="addr2" class="f-input" type="text"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-city">City</label>
+										<input id="reg-city" name="city" type="text" required class="f-input required"> 
+									</div>
+									 <div class="f-row">
+										<label for="reg-state">State</label>
+										<select id="reg-state" name="state" required class="f-input"><option value=''>select a state...</option></select> 
+									</div>
+									<div class="f-row">
+										<label for="reg-country">Country</label>
+										<select id="reg-country" name="country" required class="f-input required"></select> 
+									</div>
+									<div class="f-row">
+										<label for="reg-zip">Zip/PC</label>
+										<input id="reg-zip" name="zip" required class="f-input required" type="text"> 
+									</div>
+									<div class="f-row">
+										<label for="reg-phone">Telephone</label>
+										<input id="reg-phone" name="phone" required class="f-input required" type="tel"> 
+									</div>
+
+									<input type="hidden" id="reg-defaultbilling" name="defaultbilling" value='T'>
+									<input type="hidden" id="ref-label" name="label" value='Main'>
+
+									<div class="f-row f-row-btn">
+										<button type="submit" id="registerUser" class="button3">Create an Account <em>»</em></button>
+									</div>
+								</div>
+
+								<p id="registerUserStatus"></p>
+							</div>
+						</fieldset>
+				   </form>
+				</div>
+				<!-- END form col -->
+			</div>
+		</div>
+		<!-- END form -->
+	</div>
+</div>
+</div>
+
+<script type="text/javascript">
+
+	function loadCountry(countryCode){
+		var stateSel = jQuery("#reg-state");
+		stateSel.get(0).options.length = 1;
+		OPC.loadCountries(function(countries){
+			jQuery.each(countries, function(){
+				if(this.code == countryCode){
+					var sel = stateSel.get(0);
+					var states = this.states;
+					for(var i = 0; i< states.length; i++){
+						var opt = new Option(states[i].name, states[i].code);
+						sel.options[sel.options.length] = opt;
+					}
+				}
+			});
+		});
+	}
+
+
+	(function($){
+
+		function fillIfBlank(target){
+			return function(e){
+				var t = $("#"+target);
+				if(!t.val()) t.val(this.value);
+			};
+		}
+
+		var countrySel = $("#reg-country");
+		countrySel.get(0).options.length = 0;
+		$("#reg-country").change(function(e){loadCountry(this.options[this.selectedIndex].value);});
+		OPC.loadCountries(function(countries){
+			var sel = countrySel.get(0);
+			for(var i = 0; i< countries.length; i++){
+				var opt = new Option(countries[i].name, countries[i].code);
+				sel.options[sel.options.length] = opt;
+			}
+			countrySel.val('US').trigger('change');
+		});
+
+		$("input.required,select.required").each(function(){
+			$("label[for='"+this.id+"']").addClass('req');
+		});
+		$("#reg-companyname").blur(fillIfBlank('reg-addressee'));
+		$("#reg-name").blur(fillIfBlank('reg-attention'));
+
+		$("#returningCustomerLoginForm").validate({
+			debug:false,
+			submitHandler:function(myform){
+				OPC.loginUser($(myform).serializeObject());
+			}
+		});
+
+		$("#newCustomerLoginForm").validate({
+			debug:true,
+			rules:{
+				password1:{
+					equalTo: "#reg-password"
+				},
+				state:{
+					required:{
+						depends:function(element){
+							return element.options.length > 1;
+						}
+					}
+				}
+			},
+			submitHandler:function(myform){
+				OPC.registerUser($(myform).serializeObject());
+				return false;
+			}
+		});
+		
+	})(jQuery);
+
+
+
+
+</script>
+
+
+</body>
+</html>

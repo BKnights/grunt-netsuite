@@ -43,10 +43,6 @@ module.exports = function(grunt) {
          ]
       },
       ssp: {
-        options: {
-          basePath:"test/fixtures/SSP",
-          overwriteFiles:true        
-        },
         files: [
           {cwd: 'test/fixtures/SSP/', src:['**/*', '!**/*.bak'], filter:'isFile', dest:'Web Site Hosting Files/Live Hosting Files/SSP Applications/KOTN/Simple'}
         ]
