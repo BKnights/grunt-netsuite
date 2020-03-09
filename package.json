@@ -1,7 +1,7 @@
 {
   "name": "grunt-netsuite",
   "description": "Upload project files to Netsuite File Cabinet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/BKnights/grunt-netsuite",
   "author": {
     "name": "Brett Knights",
