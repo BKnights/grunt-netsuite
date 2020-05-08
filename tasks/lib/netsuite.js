@@ -84,6 +84,8 @@ module.exports = function(grunt){
 
 		var watched = grunt.config('netsuite.'+target +'.watched');
 
+		debug('current watched: '+ JSON.stringify(watched));
+
 		var flat = (watched && watched.length) ? 
 			watched.map((w)=>(netsuite._findFileSpec(w, target))).filter((f)=>f) :
 			netsuite._listFiles(target);
@@ -155,7 +157,9 @@ module.exports = function(grunt){
 
 	netsuite._findFileSpec =  function(filePath, target){
 		var flat = netsuite._listFiles(target);
-		return flat.find(f=>(f.src == filePath || (f.cwd+f.src) == filePath));
+		var testPath = path.normalize(filePath);
+		debug('search for '+JSON.stringify(testPath) +'\n in file specs: '+ JSON.stringify(flat, null, ' '));
+		return flat.find(f=>(path.normalize(f.src) == testPath || path.normalize(f.cwd+f.src) == testPath));
 	};
 
 
@@ -191,7 +195,7 @@ module.exports = function(grunt){
 	}, 200);
 
 	netsuite.watchHandler = function(action, filepath, target){
-
+		debug(target +' : '+ filepath +' : '+ action);
 		netsuite[target] = netsuite[target] || {};
 		netsuite[target]._filesList = null;
 
